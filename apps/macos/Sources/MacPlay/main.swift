@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 struct MacPlayApp: App {
     var body: some Scene {
         WindowGroup {
-            LauncherView().frame(minWidth: 760, minHeight: 500)
+            LauncherView().frame(minWidth: 800, minHeight: 540)
         }
         .windowStyle(.hiddenTitleBar)
     }
@@ -51,6 +51,7 @@ private enum GameLibrary {
 private struct LauncherView: View {
     @State private var games = GameLibrary.load()
     @State private var errorMessage: String?
+    private let hardware = MacHardwareSnapshot.detect()
 
     var body: some View {
         HStack(spacing: 0) {
@@ -62,11 +63,9 @@ private struct LauncherView: View {
                 Spacer()
                 Text("ANTEPRIMA SVILUPPO").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             }
-            .padding(22)
-            .frame(width: 210)
-            .background(.quaternary.opacity(0.35))
+            .padding(22).frame(width: 210).background(.quaternary.opacity(0.35))
 
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 18) {
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
                         Text("La tua libreria").font(.largeTitle.bold())
@@ -76,23 +75,29 @@ private struct LauncherView: View {
                     Spacer()
                     Button(action: importExecutable) {
                         Label("Importa .exe", systemImage: "plus")
-                    }
-                    .buttonStyle(.borderedProminent)
+                    }.buttonStyle(.borderedProminent)
                 }
+
+                HStack(spacing: 12) {
+                    hardwareCard("Mac", value: hardware.architecture, symbol: "desktopcomputer")
+                    hardwareCard("CPU", value: "\(hardware.logicalCPUCount) core logici", symbol: "cpu")
+                    hardwareCard("Memoria", value: String(format: "%.1f GB", hardware.memoryGB), symbol: "memorychip")
+                }
+                Text("\(hardware.macOSVersion) · \(hardware.memoryTier)")
+                    .font(.caption).foregroundStyle(.secondary)
+
                 Divider()
                 if games.isEmpty {
                     ContentUnavailableView(
-                        "Nessun gioco aggiunto",
-                        systemImage: "gamecontroller",
-                        description: Text("Importa un eseguibile Windows. Per ora MacPlay salva il riferimento al file: non lo esegue.")
+                        "Nessun gioco aggiunto", systemImage: "gamecontroller",
+                        description: Text("Importa un eseguibile Windows. MacPlay salva il riferimento al file, senza eseguirlo.")
                     )
                 } else {
                     List {
                         ForEach(games) { game in
                             HStack(spacing: 12) {
                                 Image(systemName: "gamecontroller")
-                                    .font(.title2)
-                                    .frame(width: 44, height: 44)
+                                    .font(.title2).frame(width: 44, height: 44)
                                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(game.title).font(.headline)
@@ -110,20 +115,29 @@ private struct LauncherView: View {
                     }
                 }
                 Spacer()
-                Text("Runtime Windows e avvio dei giochi sono ancora in sviluppo. DRM e anti-cheat possono impedire l'esecuzione.")
+                Text("Il rilevamento hardware è attivo. Runtime Windows e avvio giochi sono ancora in sviluppo; DRM e anti-cheat possono impedire l'esecuzione.")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            .padding(28)
+            .padding(26)
         }
         .background(.background)
         .alert("Operazione non riuscita", isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
+            get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
         )) {
             Button("OK", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "Errore sconosciuto")
         }
+    }
+
+    private func hardwareCard(_ title: String, value: String, symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(title, systemImage: symbol).font(.caption).foregroundStyle(.secondary)
+            Text(value).font(.headline).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func importExecutable() {
@@ -139,9 +153,7 @@ private struct LauncherView: View {
         persist(games + [GameEntry(url: url)])
     }
 
-    private func remove(_ game: GameEntry) {
-        persist(games.filter { $0.id != game.id })
-    }
+    private func remove(_ game: GameEntry) { persist(games.filter { $0.id != game.id }) }
 
     private func persist(_ updated: [GameEntry]) {
         do {

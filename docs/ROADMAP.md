@@ -1,36 +1,34 @@
 # MacPlay roadmap
 
-## Phase 0 — foundation (current)
-- [x] SwiftUI macOS shell and Rust workspace
-- [x] Conservative compatibility and optimizer models
-- [x] CI for Rust tests and Swift build
-- [ ] Run CI on GitHub and resolve platform/compiler issues
+## Foundation
+- [x] SwiftUI macOS app shell
+- [x] Rust workspace and safety-first domain crates
+- [x] Persistent local game-library UI
+- [x] Hardware inventory in the macOS UI
+- [x] Runtime launch-plan validation (no execution yet)
+- [ ] Green CI on supported macOS runners
 
-## Phase 1 — real system inventory
-- [ ] Detect Intel vs Apple Silicon, macOS version, memory and CPU count
-- [ ] Persist a local game library with stable IDs
-- [ ] Import .exe metadata and hashes without executing files
-- [ ] Diagnostics export with user consent
+## Runtime and execution
+- [ ] Choose Wine distribution after architecture, license and redistribution review
+- [ ] Runtime download with signed manifest, hashes and atomic install
+- [ ] Per-game Wine prefixes, isolated writable directories and cleanup
+- [ ] User-consented process supervisor with logs and graceful stop
+- [ ] First verified game on Intel and Apple Silicon separately
 
-## Phase 2 — runtime foundation
-- [ ] Evaluate Wine distributions, architecture support, licenses and redistribution
-- [ ] Install runtimes with checksum/signature verification
-- [ ] Per-game prefixes and isolated writable directories
-- [ ] Explicit user approval before launching executable content
+## Compatibility and Steam
+- [ ] Versioned evidence-backed compatibility database
+- [ ] Steam client detection/integration; credentials stay in official client
+- [ ] Document DRM, third-party launcher and anti-cheat restrictions
 
-## Phase 3 — compatibility and Steam
-- [ ] Evidence-backed compatibility records and test environment metadata
-- [ ] Steam client integration without collecting credentials
-- [ ] Document DRM, launcher and anti-cheat limitations
-
-## Phase 4 — launcher
-- [ ] Game cards, install/import flow, runtime selection and launch/stop controls
-- [ ] Logs, crash reports and per-game settings
-- [ ] First verified playable game on Intel and Apple Silicon separately
-
-## Phase 5 — optimizer
+## Optimizer
 - [ ] Observe memory pressure, thermal state and frame-time metrics
 - [ ] Reversible per-game graphics recommendations
-- [ ] Benchmarks before/after; never promise all games run on 8 GB
+- [ ] Benchmarks before/after; realistic 8 GB warnings
 
-A phase is complete only when implementation, tests and documented evidence exist.
+## Launcher completion (last milestone)
+- [ ] Artwork, search, filters, install/import and game detail
+- [ ] Runtime setup wizard and per-game settings
+- [ ] Launch, stop, logs, diagnostics and update UX
+- [ ] Signed/notarized universal macOS distribution
+
+A milestone is complete only with implementation, tests and documented evidence.
