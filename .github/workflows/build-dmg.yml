@@ -1,0 +1,43 @@
+name: Build MacPlay DMG
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/macos/**"
+      - "scripts/package-macos-app.sh"
+      - ".github/workflows/build-dmg.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-dmg:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build universal MacPlay.app
+        run: ./scripts/package-macos-app.sh "$RUNNER_TEMP/MacPlay.app"
+
+      - name: Create DMG
+        run: |
+          mkdir -p "$RUNNER_TEMP/dmg-root"
+          cp -R "$RUNNER_TEMP/MacPlay.app" "$RUNNER_TEMP/dmg-root/"
+          ln -s /Applications "$RUNNER_TEMP/dmg-root/Applications"
+          hdiutil create \
+            -volname "MacPlay" \
+            -srcfolder "$RUNNER_TEMP/dmg-root" \
+            -ov -format UDZO \
+            "$RUNNER_TEMP/MacPlay.dmg"
+          hdiutil verify "$RUNNER_TEMP/MacPlay.dmg"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacPlay-macOS-universal
+          path: ${{ runner.temp }}/MacPlay.dmg
+          if-no-files-found: error
+          retention-days: 14
