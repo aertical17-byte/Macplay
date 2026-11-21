@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 struct MacHardwareSnapshot {
@@ -7,14 +8,15 @@ struct MacHardwareSnapshot {
     let macOSVersion: String
 
     static func detect() -> MacHardwareSnapshot {
-        let architecture: String
-        #if arch(arm64)
-        architecture = "Apple Silicon"
-        #elseif arch(x86_64)
-        architecture = "Intel"
-        #else
-        architecture = "Sconosciuta"
-        #endif
+        // Query the physical machine, not the current process architecture.
+        // This avoids mislabelling Apple Silicon when a universal app runs under Rosetta.
+        var arm64Capability: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        let queryResult = "hw.optional.arm64".withCString {
+            sysctlbyname($0, &arm64Capability, &size, nil, 0)
+        }
+        let architecture = queryResult == 0 && arm64Capability == 1
+            ? "Apple Silicon" : "Intel"
 
         let processInfo = ProcessInfo.processInfo
         return MacHardwareSnapshot(
