@@ -1,0 +1,14 @@
+# macOS / Xcode
+.DS_Store
+.build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+# Rust
+target/
+Cargo.lock
+# Local runtime/game data
+.runtimes/
+.games/
+.env
