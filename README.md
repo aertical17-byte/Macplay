@@ -10,9 +10,11 @@ MacPlay is planned as a hybrid platform: orchestrate established compatibility t
 - Native SwiftUI macOS shell with persistent local executable library.
 - Physical Mac architecture, logical CPU count, memory capacity and macOS version display.
 - Rust workspace for hardware facts, compatibility evidence, game-library validation, runtime launch planning and conservative optimizer recommendations.
-- GitHub Actions workflow for Rust tests and macOS Swift build.
+- Read-only Steam KeyValues parser for local app manifests and library folder metadata (no credentials or Steam session access).
+- Script to assemble a local universal arm64 + x86_64 .app bundle.
+- GitHub Actions workflow for Rust tests and macOS app packaging.
 
-The current UI imports and removes executable references. It does not install Wine, execute Windows files, connect to Steam, or claim games are playable.
+The current UI imports and removes executable references. It does not yet connect the Steam parser to the interface, install Wine, execute Windows files, or claim games are playable.
 
 ## Build
 Requirements: macOS 14+, Xcode 16+, Rust stable.
@@ -22,7 +24,7 @@ cd core && cargo test --workspace
 cd ../apps/macos && swift build
 ```
 
-Create a local universal .app bundle (arm64 + x86_64):
+Create a local universal .app bundle:
 
 ```sh
 ./scripts/package-macos-app.sh
@@ -35,4 +37,4 @@ Rosetta translates macOS Intel applications on Apple silicon; it is not a Window
 
 Steam credentials must stay with the official Steam client. Importing a library does not guarantee DRM, launcher, or anti-cheat compatibility. On 8 GB Macs, some games will remain unsuitable; MacPlay will not disable swap or claim to create memory.
 
-See [Architecture](ARCHITECTURE.md), [Roadmap](docs/ROADMAP.md), [Runtime integration](docs/RUNTIME-INTEGRATION.md), and [Security](SECURITY.md).
+See [Architecture](ARCHITECTURE.md), [Roadmap](docs/ROADMAP.md), [Steam discovery](docs/STEAM-DISCOVERY.md), [Runtime integration](docs/RUNTIME-INTEGRATION.md), and [Security](SECURITY.md).
