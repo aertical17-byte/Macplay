@@ -2,18 +2,11 @@
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Value {
-    String(String),
-    Object(BTreeMap<String, Value>),
-}
+pub enum Value { String(String), Object(BTreeMap<String, Value>) }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
-    UnterminatedString,
-    InvalidEscape,
-    UnexpectedEnd,
-    UnexpectedToken,
-    DuplicateKey(String),
+    UnterminatedString, InvalidEscape, UnexpectedEnd, UnexpectedToken, DuplicateKey(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -105,12 +98,6 @@ pub fn parse_vdf(input: &str) -> Result<BTreeMap<String, Value>, ParseError> {
     Ok(result)
 }
 
-fn object<'a>(value: &'a Value, key: &str) -> Option<&'a BTreeMap<String, Value>> {
-    match value { Value::Object(map) => match map.get(key)? {
-        Value::Object(child) => Some(child), _ => None
-    }, _ => None }
-}
-
 fn string<'a>(map: &'a BTreeMap<String, Value>, key: &str) -> Option<&'a str> {
     match map.get(key)? { Value::String(value) => Some(value), _ => None }
 }
@@ -126,9 +113,10 @@ pub struct SteamAppManifest {
 impl SteamAppManifest {
     pub fn parse(input: &str) -> Result<Self, ParseError> {
         let root = parse_vdf(input)?;
-        let app = root.get("AppState").and_then(|v| match v {
-            Value::Object(map) => Some(map), _ => None
-        }).ok_or(ParseError::UnexpectedToken)?;
+        let app = match root.get("AppState") {
+            Some(Value::Object(map)) => map,
+            _ => return Err(ParseError::UnexpectedToken),
+        };
         Ok(Self {
             app_id: string(app, "appid").ok_or(ParseError::UnexpectedToken)?.to_owned(),
             name: string(app, "name").ok_or(ParseError::UnexpectedToken)?.to_owned(),
@@ -146,8 +134,10 @@ pub struct SteamLibraryFolder {
 
 pub fn parse_library_folders(input: &str) -> Result<Vec<SteamLibraryFolder>, ParseError> {
     let root = parse_vdf(input)?;
-    let libraries = object(&Value::Object(root), "libraryfolders")
-        .ok_or(ParseError::UnexpectedToken)?;
+    let libraries = match root.get("libraryfolders") {
+        Some(Value::Object(map)) => map,
+        _ => return Err(ParseError::UnexpectedToken),
+    };
     let mut result = Vec::new();
     for value in libraries.values() {
         let Value::Object(fields) = value else { continue };
@@ -168,22 +158,19 @@ mod tests {
     #[test]
     fn parses_nested_objects_and_comments() {
         let parsed = parse_vdf("// header\n\"root\" { \"child\" { \"key\" \"value\" } }").unwrap();
-        assert!(object(&Value::Object(parsed), "root").is_some());
+        assert!(matches!(parsed.get("root"), Some(Value::Object(_))));
     }
-
     #[test]
     fn parses_escaped_quotes_and_backslashes() {
         let parsed = parse_vdf("\"root\" { \"text\" \"say \\\"hi\\\" \\\\ folder\" }").unwrap();
-        let root = object(&Value::Object(parsed), "root").unwrap();
+        let root = match parsed.get("root").unwrap() { Value::Object(map) => map, _ => panic!() };
         assert_eq!(string(root, "text"), Some("say \"hi\" \\ folder"));
     }
-
     #[test]
     fn rejects_duplicate_keys() {
         assert_eq!(parse_vdf("\"a\" \"1\" \"a\" \"2\""),
             Err(ParseError::DuplicateKey("a".into())));
     }
-
     #[test]
     fn parses_app_manifest() {
         let text = "\"AppState\" { \"appid\" \"570\" \"name\" \"Dota 2\" \"installdir\" \"dota 2\" \"StateFlags\" \"4\" }";
@@ -192,7 +179,6 @@ mod tests {
         assert_eq!(app.name, "Dota 2");
         assert_eq!(app.install_directory, "dota 2");
     }
-
     #[test]
     fn parses_library_folders_and_app_ids() {
         let text = "\"libraryfolders\" { \"0\" { \"path\" \"/Steam\" \"apps\" { \"10\" \"1\" \"20\" \"1\" } } }";
