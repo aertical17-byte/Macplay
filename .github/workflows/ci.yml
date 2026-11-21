@@ -21,5 +21,5 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - name: Build Swift package
-        run: swift build --package-path apps/macos
+      - name: Build universal app bundle
+        run: ./scripts/package-macos-app.sh "$RUNNER_TEMP/MacPlay.app"
